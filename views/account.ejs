@@ -1,0 +1,11 @@
+<%- include header %>
+	<div>
+		<h2>用户名：<%= user.name %></h2>
+		<div>创建时间：<%= user.time.toLocaleString() %></div>
+	</div>
+	<form action="/upload/images" method="post" enctype="multipart/form-data">
+		<h2>单图上传</h2>
+		<input type="file" name="logo">
+		<input type="submit" value="提交">
+	</form>
+<%- include footer %>

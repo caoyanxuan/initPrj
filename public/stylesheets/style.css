@@ -8,4 +8,19 @@ nav a:hover{background-color:#ff0000;color:#f9f9f9;-webkit-transition:color .2s 
 article{font-size:16px;padding-top:.5em;}
 article a{color:#dd0000;text-decoration:none;}
 article a:hover{color:#333333;text-decoration:underline;}
-.info{font-size:14px;}
+.post-lists {
+    border: 1px solid #ccc;
+    padding: 10px 50px;
+    margin: 10px 0;
+}
+.post-lists .info{font-size:14px;}
+.post-lists a{
+    color: #7fb7ff;
+}
+.portrait {
+    display: inline-block;
+    border: 0;
+    width: 50px;
+    height: 50px;
+    
+}
