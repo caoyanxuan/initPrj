@@ -1,22 +1,39 @@
 var crypto = require('crypto');
-var Db = require('../models/db.js');
+var db = require('../models/db.js');
 var UserModel = require('../models/user.js');
 var PostModel = require('../models/post.js');
+var upload = require('../models/upload.js');
 
 module.exports = function (app) {
-	// 主页
+	// 检查用户是否登录的中间件，用于权限控制
+	function checkLogin(req, res, next) {
+		if (!req.session.user) {
+			req.flash('error', '未登录!');
+			res.redirect('/login');
+		}
+		next();
+	}
 
+	function checkNotLogin(req, res, next) {
+		if (req.session.user) {
+			req.flash('error', '已登录!');
+			res.redirect('back');
+		}
+		next();
+	}
+
+	// 主页
 	app.get('/', function (req, res) {
-		PostModel.find({
-			name: req.session.user ? req.session.user.name : ''
-		}, function (err, postsArr) {
+		console.log('req.session.user', req.session.user);
+		var nameObj = req.session.user ? {name: req.session.user.name} : null
+		PostModel.find(nameObj, function (err, postsArr) {
 			if (err) {
 				postsArr = [];
 			} else {
 				res.render('index', {
 					title: '天天博客',
 					user: req.session.user,
-					posts: postsArr,
+					posts: postsArr, // {array} 发布的博客列表
 					success: req.flash('success').toString(),
 					error: req.flash('error').toString()
 				});
@@ -123,7 +140,7 @@ module.exports = function (app) {
 		res.redirect('/');
 	});
 
-	// 发版
+	// 发表
 	app.get('/post', checkLogin);
 	app.get('/post', function (req, res) {
 		res.render('post', {
@@ -137,6 +154,7 @@ module.exports = function (app) {
 	app.post('/post', function (req, res) {
 		var NewPostEntity = new PostModel({
 			name: req.session.user.name,
+			portrait: req.session.user.portrait,
 			title: req.body.title,
 			post: req.body.post
 		})
@@ -150,47 +168,61 @@ module.exports = function (app) {
 		})
 	});
 
-	// 账户
-	app.get('/account', checkLogin);
-	app.get('/account', function (req, res) {
-		res.render('account', {
+	// 上传
+	app.get('/upload', checkLogin);
+	app.get('/upload', function (req, res) {
+		res.render('upload', {
 			title: '账户',
 			user: req.session.user,
 			success: req.flash('success').toString(),
 			error: req.flash('error').toString()
 		});
 	});
-	app.post('/post', checkLogin);
-	app.post('/post', function (req, res) {
-		// var NewPostEntity = new PostModel({
-		// 	name: req.session.user.name,
-		// 	title: req.body.title,
-		// 	post: req.body.post
-		// })
-		// NewPostEntity.save(function (err, postData) {
-		// 	if (err) {
-		// 		req.flash('error', postData);
-		// 		return res.redirect('/post');
-		// 	} else {
-		// 		return res.redirect('/');
-		// 	}
-		// })
-	});
-
-	// 检查用户是否登录的中间件，用于权限控制
-	function checkLogin(req, res, next) {
-		if (!req.session.user) {
-			req.flash('error', '未登录!');
-			res.redirect('/login');
+	
+	app.post('/upload', checkLogin);
+	// upload.array('img',5),可实现多文件上传，PS:第一个参数必须和input的name相同
+	app.post('/upload', upload.array('img',1), function (req, res, next) {
+		// 判断是否选择了文件
+		if (req.files.length === 0) {
+			req.flash('error', '请选择图片上传');
+			return res.redirect('/upload');
 		}
-		next();
-	}
 
-	function checkNotLogin(req, res, next) {
-		if (req.session.user) {
-			req.flash('error', '已登录!');
-			res.redirect('back');
+		// 判断文件格式是否为图片
+		if (req.files[0].mimetype.indexOf('image') === -1) {
+			req.flash('error', '上传类型为图片');
+			return res.redirect('/upload');
 		}
-		next();
-	}
+
+		// 上传到服务器
+		var targetName = {name: req.session.user.name};
+		var updatePortrait = {portrait: req.files[0].path};
+		if (res) {
+			UserModel.update(targetName, updatePortrait, function(error){
+				if(error) {
+					req.flash('error', postData);
+					return res.redirect('/');
+				} else {
+					req.session.user.portrait = req.files[0].path;
+					req.flash('success', '文件上传成功!');
+					res.redirect('/')
+				}
+			});
+		}
+	})
+
+	// // 文章详情页
+	// app.get('/detail', checkLogin);
+	// app.get('/detail/:id', function (req, res) {
+	// 	// console.log('window.location', window.location);
+	// 	res.render('detail', {
+	// 		title: '文章详情',
+	// 		id: req.params.id,
+	// 		user: req.session.user,
+	// 		success: req.flash('success').toString(),
+	// 		error: req.flash('error').toString()
+	// 	});
+	// });
+
+
 };

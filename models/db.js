@@ -8,9 +8,9 @@ var settings = require('../settings');
 var mongoose = require('mongoose');
 
 mongoose.connect(settings.url);
-var Db = mongoose.connection;
-Db.on('connected', console.error.bind(console, '连接成功'));
-Db.on('error', console.error.bind(console, '连接失败'));
-Db.on('disconnected', console.error.bind(console, '连接断开'));
+var db = mongoose.connection;
+db.on('connected', console.error.bind(console, '连接成功'));
+db.on('error', console.error.bind(console, '连接失败'));
+db.on('disconnected', console.error.bind(console, '连接断开'));
 
-module.exports = Db;
+module.exports = db;

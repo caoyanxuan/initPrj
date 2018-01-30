@@ -9,6 +9,7 @@ var settings = require('./settings');
 var session = require('express-session');
 var MongoStore = require('connect-mongo')(session);
 var flash = require('connect-flash');
+
 var app = express();
 
 // view engine setup
@@ -23,7 +24,7 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '/')));
 app.use(session({
   secret: settings.cookieSecret,
   key: settings.db,//cookie name
